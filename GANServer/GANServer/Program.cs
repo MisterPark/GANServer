@@ -14,6 +14,8 @@ namespace GANServer
     [STAThread]
     static void Main()
     {
+      NetServer server = new NetServer(14536);
+      server.Start();
       Application.EnableVisualStyles();
       Application.SetCompatibleTextRenderingDefault(false);
       Application.Run(new Form1());

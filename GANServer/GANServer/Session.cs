@@ -12,8 +12,7 @@ namespace GANServer
   {
     public Socket Socket { get; set; } = null;
     public int ID { get; set; }
-    public byte[] recvBytes = new byte[1024];
-    public StringBuilder RecvBuffer { get; private set; } = new StringBuilder();
-    public StringBuilder SendBuffer { get; private set; } = new StringBuilder();
+    public NetBuffer RecvBuffer { get; set; } = new NetBuffer();
+    public NetBuffer SendBuffer { get; set; } = new NetBuffer();
   }
 }

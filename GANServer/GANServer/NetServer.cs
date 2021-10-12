@@ -18,8 +18,10 @@ namespace GANServer
     int port;
     ConcurrentDictionary<int,Session> Sessions;
     bool isStart = false;
-    int numConnectedSessions = 0;
     int uniqueID = 0;
+
+    public delegate void OnReceived(int sessionID, Packet packet);
+    public event OnReceived Received;
 
     public NetServer(int port)
     {
@@ -45,6 +47,7 @@ namespace GANServer
       listenSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
       listenSocket.Bind(endPoint);
       listenSocket.Listen(ushort.MaxValue);
+      Logger.Enqueue("[System] Listening...");
 
       SocketAsyncEventArgs args = new SocketAsyncEventArgs();
       args.Completed += new EventHandler<SocketAsyncEventArgs>(AcceptCompleted);
@@ -80,7 +83,10 @@ namespace GANServer
           }
           finally
           {
+            IPEndPoint endpoint = session.Socket.RemoteEndPoint as IPEndPoint;
+            Logger.Enqueue($"[System] Disconnect SeesionID : {session.ID} [{endpoint.Address.ToString()}]  Number of Users : {Sessions.Count}");
             session.Socket.Close();
+            session.Socket.Dispose();
             session.Socket = null;
           }
         }
@@ -93,7 +99,10 @@ namespace GANServer
     /// <param name="session">세션 입니다.</param>
     public void Disconnect(Session session)
     {
-      if(session.Socket.Connected)
+      Session remome;
+      Sessions.TryRemove(session.ID, out remome);
+
+      if (session.Socket.Connected)
       {
         try
         {
@@ -101,11 +110,13 @@ namespace GANServer
         }
         finally
         {
+          IPEndPoint endpoint = session.Socket.RemoteEndPoint as IPEndPoint;
+          Logger.Enqueue($"[System] Disconnect SeesionID : {session.ID} [{endpoint.Address.ToString()}]  Number of Users : {Sessions.Count}");
           session.Socket.Close();
+          session.Socket.Dispose();
           session.Socket = null;
         }
-        Session remome;
-        Sessions.TryRemove(session.ID, out remome);
+        
       }
     }
 
@@ -132,7 +143,7 @@ namespace GANServer
       {
         e.AcceptSocket = null;
       }
-
+      
       bool willRaiseEvent = listenSocket.AcceptAsync(e);
       if (!willRaiseEvent)
       {
@@ -162,16 +173,17 @@ namespace GANServer
         }
 
         SocketAsyncEventArgs args = new SocketAsyncEventArgs();
-        args.Completed += new EventHandler<SocketAsyncEventArgs>(AcceptCompleted);
+        args.Completed += new EventHandler<SocketAsyncEventArgs>(IOCompleted);
         args.UserToken = session;
-        args.SetBuffer(session.recvBytes, 0, session.recvBytes.Length);
+        args.SetBuffer(session.RecvBuffer.Buffer, session.RecvBuffer.Offset, session.RecvBuffer.WritableLength);
         bool pending = e.AcceptSocket.ReceiveAsync(args);
         if(!pending)
         {
           ReceiveCompleted(e);
         }
 
-        Logger.Enqueue($"[System] Accept SeesionID : {session.ID}");
+        IPEndPoint endpoint = session.Socket.RemoteEndPoint as IPEndPoint;
+        Logger.Enqueue($"[System] Accept SeesionID : {session.ID} [{endpoint.Address.ToString()}] Number of Users : {Sessions.Count}");
       }
 
       StartAccept(e);
@@ -198,21 +210,39 @@ namespace GANServer
       Session session = (Session)e.UserToken;
       if (e.SocketError == SocketError.Success && e.BytesTransferred > 0)
       {
-        session.RecvBuffer.Append(BitConverter.ToString(e.Buffer), e.Offset, e.BytesTransferred);
+        session.RecvBuffer.MoveRear(e.BytesTransferred);
 
         NetHeader header;
         header.Code = 0;
         header.Length = 0;
         int headerSize = Marshal.SizeOf(header);
-        int size = 0;
+        int size;
         
         while(true)
         {
           size = session.RecvBuffer.Length;
           if (size < headerSize) break;
-          // TODO : 여기서 부터
+          session.RecvBuffer.Peek<NetHeader>(ref header);
+          if(header.Code != Packet.CODE)
+          {
+            Logger.Enqueue("[Error] 패킷의 코드가 일치하지 않습니다.");
+            break;
+          }
+          if (size < headerSize + header.Length) break;
+
+          Packet packet = new Packet(header.Length);
+          session.RecvBuffer.MoveFront(headerSize);
+          session.RecvBuffer.Read(ref packet.Buffer, packet.Offset, header.Length);
+          packet.MoveRear(header.Length);
+
+          Received.Invoke(session.ID, packet);
         }
 
+        if(session.RecvBuffer.WritableLength == 0)
+        {
+          session.RecvBuffer.Resize(session.RecvBuffer.BufferSize * 2);
+        }
+        e.SetBuffer(session.RecvBuffer.Buffer, session.RecvBuffer.Offset, session.RecvBuffer.WritableLength);
         bool pending = session.Socket.ReceiveAsync(e);
         if (!pending)
         {
@@ -230,7 +260,7 @@ namespace GANServer
       Session session = (Session)e.UserToken;
       if (e.SocketError == SocketError.Success)
       {
-
+        session.SendBuffer.MoveFront(e.BytesTransferred);
 
         bool pending = session.Socket.SendAsync(e);
         if (!pending)
