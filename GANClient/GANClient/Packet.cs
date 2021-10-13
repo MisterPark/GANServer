@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
+using System.IO;
 
 namespace GANClient
 {
@@ -21,7 +22,8 @@ namespace GANClient
     int bufferSize;
     int front;
     int rear;
-    public int Offset { get { return rear; } }
+    public int Front { get { return front; } }
+    public int Rear { get { return rear; } }
     public int Length { get { return rear - front; } }
     public int WritableLength { get { return bufferSize - rear; } }
 
@@ -59,19 +61,58 @@ namespace GANClient
       Write(header.Code);
       Write(header.Length);
 
-      System.Buffer.BlockCopy(temp, originOffset, Buffer, front, originLength);
+      System.Buffer.BlockCopy(temp, originOffset, Buffer, rear, originLength);
+      rear += originLength;
+    }
 
+    public void Resize(int newSize)
+    {
+      if (newSize <= 0)
+      {
+        throw new Exception("newSize 는 0보다 작을 수 없습니다.");
+      }
+      int copySize = (newSize < Length) ? newSize : Length;
+      byte[] newBuffer = new byte[newSize];
+      System.Buffer.BlockCopy(Buffer, front, newBuffer, 0, copySize);
+      Buffer = newBuffer;
+      bufferSize = newSize;
+      front = 0;
+      rear = copySize;
     }
 
     public void Write(int value)
     {
       byte[] binary = BitConverter.GetBytes(value);
-      if(WritableLength < binary.Length)
+      if (WritableLength < binary.Length)
       {
-        byte[] temp = new byte[bufferSize + binary.Length];
-        System.Buffer.BlockCopy(Buffer, front, temp, 0, Length);
-        rear = Length;
-        front = 0;
+        Resize(bufferSize + binary.Length);
+      }
+      System.Buffer.BlockCopy(binary, 0, Buffer, rear, binary.Length);
+      rear += binary.Length;
+    }
+
+    public void Write(string value)
+    {
+      byte[] binary = Encoding.UTF8.GetBytes(value);
+      Write(binary.Length);
+      if (WritableLength < binary.Length)
+      {
+        Resize(bufferSize + binary.Length);
+      }
+
+      System.Buffer.BlockCopy(binary, 0, Buffer, rear, binary.Length);
+      rear += binary.Length;
+    }
+
+    public void Write(System.Drawing.Image value)
+    {
+      MemoryStream ms = new MemoryStream();
+      value.Save(ms, value.RawFormat);
+      byte[] binary = ms.ToArray();
+      Write(binary.Length);
+      if (WritableLength < binary.Length)
+      {
+        Resize(bufferSize + binary.Length);
       }
       System.Buffer.BlockCopy(binary, 0, Buffer, rear, binary.Length);
       rear += binary.Length;
@@ -87,6 +128,40 @@ namespace GANClient
 
       value = BitConverter.ToInt32(Buffer, front);
       front += bytesLen;
+      return true;
+    }
+
+    public bool Read(ref string value)
+    {
+      int len = 0;
+      if (Read(ref len) == false)
+      {
+        return false;
+      }
+      if (this.Length < len)
+      {
+        return false;
+      }
+
+      value = Encoding.UTF8.GetString(Buffer, front, len);
+      front += len;
+      return true;
+    }
+
+    public bool Read(ref System.Drawing.Image value)
+    {
+      int len = 0;
+      if (Read(ref len) == false)
+      {
+        return false;
+      }
+      if (this.Length < len)
+      {
+        return false;
+      }
+
+      MemoryStream ms = new MemoryStream(Buffer, front, len);
+      value = System.Drawing.Image.FromStream(ms);
       return true;
     }
 

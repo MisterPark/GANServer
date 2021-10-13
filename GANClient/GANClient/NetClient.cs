@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
+using System.Runtime.InteropServices;
 
 namespace GANClient
 {
@@ -14,6 +16,9 @@ namespace GANClient
     IPEndPoint endpoint = null;
     bool tryConnect = false;
     NetBuffer recvBuffer;
+
+    public delegate void OnReceived(Packet packet);
+    public event OnReceived Received;
 
     public NetClient(string serverIP, int port)
     {
@@ -44,13 +49,23 @@ namespace GANClient
       {
         socket.Disconnect(true);
         tryConnect = false;
+        Logger.Enqueue($"[System] Disconnect.");
       }
     }
 
     public void Send(Packet packet)
     {
-
+      packet.SetHeader();
+      SocketAsyncEventArgs args = new SocketAsyncEventArgs();
+      args.Completed += IOCompleted;
+      args.SetBuffer(packet.Buffer, packet.Front, packet.Length);
+      bool pending = socket.SendAsync(args);
+      if(!pending)
+      {
+        SendCompleted(args);
+      }
     }
+
 
     private void ConnectCompleted(object sender, SocketAsyncEventArgs e)
     {
@@ -62,12 +77,13 @@ namespace GANClient
         SocketAsyncEventArgs args = new SocketAsyncEventArgs();
         args.Completed += new EventHandler<SocketAsyncEventArgs>(IOCompleted);
         args.UserToken = socket;
-        args.SetBuffer(recvBuffer.Buffer, recvBuffer.Offset, recvBuffer.WritableLength);
+        args.SetBuffer(recvBuffer.Buffer, recvBuffer.Rear, recvBuffer.WritableLength);
         bool pending = e.ConnectSocket.ReceiveAsync(args);
       }
       else
       {
         tryConnect = false;
+        Logger.Enqueue($"[System] Connect Failed!!");
       }
     }
 
@@ -89,12 +105,61 @@ namespace GANClient
 
     private void ReceiveCompleted(SocketAsyncEventArgs e)
     {
+      if (e.SocketError == SocketError.Success && e.BytesTransferred > 0)
+      {
+        recvBuffer.MoveRear(e.BytesTransferred);
 
+        NetHeader header;
+        header.Code = 0;
+        header.Length = 0;
+        int headerSize = Marshal.SizeOf(header);
+        int size;
+
+        while (true)
+        {
+          size = recvBuffer.Length;
+          if (size < headerSize) break;
+          recvBuffer.Peek<NetHeader>(ref header);
+          if (header.Code != Packet.CODE)
+          {
+            Logger.Enqueue($"[Error] 패킷의 코드가 일치하지 않습니다. Code : {header.Code}");
+            break;
+          }
+          if (size < headerSize + header.Length) break;
+
+          Packet packet = new Packet(header.Length);
+          recvBuffer.MoveFront(headerSize);
+          recvBuffer.Read(ref packet.Buffer, packet.Rear, header.Length);
+          packet.MoveRear(header.Length);
+
+          Received.Invoke(packet);
+        }
+
+        if (recvBuffer.WritableLength == 0)
+        {
+          recvBuffer.Resize(recvBuffer.BufferSize * 2);
+        }
+        e.SetBuffer(recvBuffer.Buffer, recvBuffer.Rear, recvBuffer.WritableLength);
+        bool pending = socket.ReceiveAsync(e);
+        if (!pending)
+        {
+          ReceiveCompleted(e);
+        }
+      }
+      else
+      {
+        Logger.Enqueue($"[Error] Receicve Failed!");
+        Disconnect();
+      }
     }
 
     private void SendCompleted(SocketAsyncEventArgs e)
     {
-
+      if(e.SocketError != SocketError.Success)
+      {
+        Logger.Enqueue($"[Error] Send Failed!");
+        Disconnect();
+      }
     }
 
   }

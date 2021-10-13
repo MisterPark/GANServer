@@ -132,6 +132,27 @@ namespace GANServer
       
     }
 
+    public void SendUnicast(int sessionID, Packet packet)
+    {
+      Session session;
+      if(Sessions.TryGetValue(sessionID,out session))
+      {
+        packet.SetHeader();
+        session.SendBuffer.Enqueue(packet);
+        ProcessSend(sessionID);
+      }
+    }
+
+    public void SendBroadcast(Packet packet)
+    {
+      packet.SetHeader();
+      foreach (var item in Sessions)
+      {
+        item.Value.SendBuffer.Enqueue(packet);
+        ProcessSend(item.Key);
+      }
+    }
+
     private void StartAccept(SocketAsyncEventArgs e)
     {
       if (e == null)
@@ -175,7 +196,7 @@ namespace GANServer
         SocketAsyncEventArgs args = new SocketAsyncEventArgs();
         args.Completed += new EventHandler<SocketAsyncEventArgs>(IOCompleted);
         args.UserToken = session;
-        args.SetBuffer(session.RecvBuffer.Buffer, session.RecvBuffer.Offset, session.RecvBuffer.WritableLength);
+        args.SetBuffer(session.RecvBuffer.Buffer, session.RecvBuffer.Rear, session.RecvBuffer.WritableLength);
         bool pending = e.AcceptSocket.ReceiveAsync(args);
         if(!pending)
         {
@@ -225,14 +246,14 @@ namespace GANServer
           session.RecvBuffer.Peek<NetHeader>(ref header);
           if(header.Code != Packet.CODE)
           {
-            Logger.Enqueue("[Error] 패킷의 코드가 일치하지 않습니다.");
+            Logger.Enqueue($"[Error] 패킷의 코드가 일치하지 않습니다. Code : {header.Code}");
             break;
           }
           if (size < headerSize + header.Length) break;
 
           Packet packet = new Packet(header.Length);
           session.RecvBuffer.MoveFront(headerSize);
-          session.RecvBuffer.Read(ref packet.Buffer, packet.Offset, header.Length);
+          session.RecvBuffer.Read(ref packet.Buffer, packet.Rear, header.Length);
           packet.MoveRear(header.Length);
 
           Received.Invoke(session.ID, packet);
@@ -242,7 +263,7 @@ namespace GANServer
         {
           session.RecvBuffer.Resize(session.RecvBuffer.BufferSize * 2);
         }
-        e.SetBuffer(session.RecvBuffer.Buffer, session.RecvBuffer.Offset, session.RecvBuffer.WritableLength);
+        e.SetBuffer(session.RecvBuffer.Buffer, session.RecvBuffer.Rear, session.RecvBuffer.WritableLength);
         bool pending = session.Socket.ReceiveAsync(e);
         if (!pending)
         {
@@ -260,17 +281,49 @@ namespace GANServer
       Session session = (Session)e.UserToken;
       if (e.SocketError == SocketError.Success)
       {
-        session.SendBuffer.MoveFront(e.BytesTransferred);
-
-        bool pending = session.Socket.SendAsync(e);
-        if (!pending)
+        while (session.SendBuffer.Count > 0)
         {
-          SendCompleted(e);
+          Packet packet;
+          if (session.SendBuffer.TryDequeue(out packet))
+          {
+            e.SetBuffer(packet.Buffer, packet.Front, packet.Length);
+            bool pending = session.Socket.SendAsync(e);
+            if (!pending)
+            {
+              SendCompleted(e);
+            }
+          }
+          else
+          {
+            break;
+          }
         }
+        
       }
       else
       {
         Disconnect(session);
+      }
+    }
+
+    private void ProcessSend(int sessionID)
+    {
+      Session session;
+      if(Sessions.TryGetValue(sessionID,out session))
+      {
+        Packet packet;
+        if(session.SendBuffer.TryDequeue(out packet))
+        {
+          SocketAsyncEventArgs args = new SocketAsyncEventArgs();
+          args.Completed += IOCompleted;
+          args.UserToken = session;
+          args.SetBuffer(packet.Buffer, packet.Front, packet.Length);
+          bool pending = session.Socket.SendAsync(args);
+          if (!pending)
+          {
+            SendCompleted(args);
+          }
+        }
       }
     }
 

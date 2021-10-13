@@ -16,7 +16,8 @@ namespace GANServer
     public int BufferSize { get { return bufferSize; } }
     int front;
     int rear;
-    public int Offset { get { return rear; } }
+    public int Front { get { return front; } }
+    public int Rear { get { return rear; } }
     public int Length { get { return rear - front; } }
     public int WritableLength { get { return bufferSize - rear; } }
 
