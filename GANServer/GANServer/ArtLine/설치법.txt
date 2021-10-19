@@ -1,0 +1,10 @@
+https://github.com/vijishmadhavan/ArtLine/tree/7f79668528a7e18d8e23f8ed7361f5701bde0f13
+
+pre trained data
+https://www.dropbox.com/s/starqc9qd2e1lg1/ArtLine_650.pkl?dl=1
+다운 받고 checkpoint 폴더 안에 넣으면 됩니다
+
+conda install python==3.6.13
+conda install pytorch=1.6.0 torchvision cpuonly -c pytorch
+pip install fastai==1.0.61
+conda install opencv
