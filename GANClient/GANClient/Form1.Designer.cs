@@ -40,8 +40,9 @@ namespace GANClient
       this.pictureBox2 = new System.Windows.Forms.PictureBox();
       this.label1 = new System.Windows.Forms.Label();
       this.groupBox1 = new System.Windows.Forms.GroupBox();
-      this.radioButton1 = new System.Windows.Forms.RadioButton();
       this.radioButton2 = new System.Windows.Forms.RadioButton();
+      this.radioButton1 = new System.Windows.Forms.RadioButton();
+      this.radioButton3 = new System.Windows.Forms.RadioButton();
       ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
       this.panel1.SuspendLayout();
       this.panel2.SuspendLayout();
@@ -147,6 +148,7 @@ namespace GANClient
       // 
       // groupBox1
       // 
+      this.groupBox1.Controls.Add(this.radioButton3);
       this.groupBox1.Controls.Add(this.radioButton2);
       this.groupBox1.Controls.Add(this.radioButton1);
       this.groupBox1.Location = new System.Drawing.Point(596, 117);
@@ -156,11 +158,21 @@ namespace GANClient
       this.groupBox1.TabStop = false;
       this.groupBox1.Text = "GAN 타입";
       // 
+      // radioButton2
+      // 
+      this.radioButton2.AutoSize = true;
+      this.radioButton2.Location = new System.Drawing.Point(6, 47);
+      this.radioButton2.Name = "radioButton2";
+      this.radioButton2.Size = new System.Drawing.Size(84, 16);
+      this.radioButton2.TabIndex = 1;
+      this.radioButton2.Text = "Cartoonize";
+      this.radioButton2.UseVisualStyleBackColor = true;
+      // 
       // radioButton1
       // 
       this.radioButton1.AutoSize = true;
       this.radioButton1.Checked = true;
-      this.radioButton1.Location = new System.Drawing.Point(25, 41);
+      this.radioButton1.Location = new System.Drawing.Point(6, 25);
       this.radioButton1.Name = "radioButton1";
       this.radioButton1.Size = new System.Drawing.Size(135, 16);
       this.radioButton1.TabIndex = 0;
@@ -168,15 +180,15 @@ namespace GANClient
       this.radioButton1.Text = "CartoonGAN-Hayao";
       this.radioButton1.UseVisualStyleBackColor = true;
       // 
-      // radioButton2
+      // radioButton3
       // 
-      this.radioButton2.AutoSize = true;
-      this.radioButton2.Location = new System.Drawing.Point(25, 63);
-      this.radioButton2.Name = "radioButton2";
-      this.radioButton2.Size = new System.Drawing.Size(84, 16);
-      this.radioButton2.TabIndex = 1;
-      this.radioButton2.Text = "Cartoonize";
-      this.radioButton2.UseVisualStyleBackColor = true;
+      this.radioButton3.AutoSize = true;
+      this.radioButton3.Location = new System.Drawing.Point(6, 69);
+      this.radioButton3.Name = "radioButton3";
+      this.radioButton3.Size = new System.Drawing.Size(62, 16);
+      this.radioButton3.TabIndex = 2;
+      this.radioButton3.Text = "ArtLine";
+      this.radioButton3.UseVisualStyleBackColor = true;
       // 
       // Form1
       // 
@@ -223,6 +235,7 @@ namespace GANClient
     private System.Windows.Forms.GroupBox groupBox1;
     private System.Windows.Forms.RadioButton radioButton2;
     private System.Windows.Forms.RadioButton radioButton1;
+    private System.Windows.Forms.RadioButton radioButton3;
   }
 }
 

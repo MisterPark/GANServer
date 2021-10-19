@@ -7,5 +7,6 @@ public enum MsgType : int
   Image,
   CartoonGAN,
   Cartoonize,
+  Artline,
 }
 

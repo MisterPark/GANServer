@@ -46,6 +46,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Artline.cs" />
     <Compile Include="CartoonGAN.cs" />
     <Compile Include="Cartoonize.cs" />
     <Compile Include="Form1.cs">

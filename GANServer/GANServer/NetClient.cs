@@ -66,11 +66,11 @@ namespace GANServer
 
     public void Disconnect()
     {
-      if(socket.Connected)
+      Logger.Enqueue($"[System] Disconnect. [{endpoint.Address}:{endpoint.Port}]");
+      if (socket.Connected)
       {
         socket.Disconnect(true);
         tryConnect = false;
-        Logger.Enqueue($"[System] Disconnect.");
       }
     }
 
@@ -191,7 +191,7 @@ namespace GANServer
       }
       else
       {
-        Logger.Enqueue($"[Error] Receicve Failed!");
+        //Logger.Enqueue($"[Error] Receicve Failed!");
         Disconnect();
       }
     }

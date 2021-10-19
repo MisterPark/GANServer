@@ -73,6 +73,9 @@ namespace GANClient
         case MsgType.Cartoonize:
           ReceiveCartoonize(packet);
           break;
+        case MsgType.ArtLine:
+          ReceiveArtline(packet);
+          break;
         default:
           Logger.Enqueue($"[System] 알 수 없는 메세지 타입 : {msgType}");
           break;
@@ -170,6 +173,24 @@ namespace GANClient
       }
     }
 
+    private void ReceiveArtline(Packet packet)
+    {
+      int transactionID = 0;
+      System.Drawing.Image img = null;
+      packet.Read(ref transactionID);
+      if (packet.Read(ref img))
+      {
+        CreateFolder();
+        img.Save(imgPath + $"\\{transactionID}.png", System.Drawing.Imaging.ImageFormat.Png);
+        this.Invoke(new Action(delegate ()
+        {
+          button2.Enabled = true;
+          pictureBox2.Image = img;
+        }));
+        Logger.Enqueue($"[System] Cartoonize 이미지 변환 성공 transaction : {transactionID}");
+      }
+    }
+
     private void button1_Click(object sender, EventArgs e)
     {
       SendChat();
@@ -206,6 +227,10 @@ namespace GANClient
       else if(radioButton2.Checked)
       {
         type = MsgType.Cartoonize;
+      }
+      else if(radioButton3.Checked)
+      {
+        type = MsgType.ArtLine;
       }
       // 이미지 변환
       SendImage(type);

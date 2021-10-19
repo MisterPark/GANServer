@@ -17,9 +17,11 @@ namespace GANServer
     NetServer server;
     NetClient cartoonGANClient;
     NetClient cartoonizeClient;
+    NetClient artlineClient;
     int transaction = 0;
     CartoonGAN gan;
     Cartoonize cartoonize;
+    Artline artline;
 
     public Form1()
     {
@@ -37,6 +39,9 @@ namespace GANServer
       cartoonize = new Cartoonize();
       cartoonize.Start();
 
+      artline = new Artline();
+      artline.Start();
+
       cartoonGANClient = new NetClient("127.0.0.1", 9999);
       cartoonGANClient.Received += ProcessPacket;
       cartoonGANClient.ConnectAsync(true);
@@ -44,6 +49,10 @@ namespace GANServer
       cartoonizeClient = new NetClient("127.0.0.1", 8888);
       cartoonizeClient.Received += ProcessPacket;
       cartoonizeClient.ConnectAsync(true);
+
+      artlineClient = new NetClient("127.0.0.1", 6666);
+      artlineClient.Received += ProcessPacket;
+      artlineClient.ConnectAsync(true);
 
       server = new NetServer(14536);
       server.Received += ProcessPacket;
@@ -80,6 +89,9 @@ namespace GANServer
         case MsgType.Cartoonize:
           RequestConvertCartoonize(sessionID, packet);
           break;
+        case MsgType.Artline:
+          RequestConvertArtLine(sessionID, packet);
+          break;
         default:
           Logger.Enqueue($"[System] 알 수 없는 메세지 타입 : {msgType} / SessionID : {sessionID}");
           server.Disconnect(sessionID);
@@ -101,6 +113,9 @@ namespace GANServer
           break;
         case MsgType.Cartoonize:
           ResponseConvertCartoonize(packet);
+          break;
+        case MsgType.Artline:
+          ResponseConvertArtLine(packet);
           break;
         default:
           Logger.Enqueue($"[System] 알 수 없는 메세지 타입 : {msgType} / GAN Server로부터 받은 메세지");
@@ -137,6 +152,23 @@ namespace GANServer
 
       Packet pack = new Packet();
       pack.Write((int)MsgType.Cartoonize);
+      pack.Write(transactionId);
+      pack.Write(image);
+      server.SendUnicast(sessionID, pack);
+    }
+
+    private void ResponseConvertArtLine(Packet packet)
+    {
+      // Cartoonize 에서 응답
+      int sessionID = -1;
+      int transactionId = 0;
+      Image image = null;
+      packet.Read(ref sessionID);
+      packet.Read(ref transactionId);
+      packet.Read(ref image);
+
+      Packet pack = new Packet();
+      pack.Write((int)MsgType.Artline);
       pack.Write(transactionId);
       pack.Write(image);
       server.SendUnicast(sessionID, pack);
@@ -219,5 +251,25 @@ namespace GANServer
         cartoonizeClient.Send(pack);
       }
     }
+
+    private void RequestConvertArtLine(int sessionID, Packet packet)
+    {
+      string imgLocation = string.Empty;
+      System.Drawing.Image img = null;
+      packet.Read(ref imgLocation);
+      if (packet.Read(ref img))
+      {
+        Logger.Enqueue($"[System] 이미지 Cartoonize 변환 요청 {imgLocation}");
+        int transactionId = Interlocked.Increment(ref transaction);
+
+        Packet pack = new Packet();
+        pack.Write((int)MsgType.Artline);
+        pack.Write(sessionID);
+        pack.Write(transactionId);
+        pack.Write(img);
+        artlineClient.Send(pack);
+      }
+    }
+
   }
 }
