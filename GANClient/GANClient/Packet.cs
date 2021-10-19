@@ -10,14 +10,14 @@ namespace GANClient
 {
   public struct NetHeader
   {
-    public byte Code;
+    public int Code;
     public int Length;
   }
 
   class Packet
   {
     public const int DEFAULT_SIZE = 1024;
-    public const byte CODE = 0x77;
+    public const int CODE = 0x77;
     public byte[] Buffer;
     int bufferSize;
     int front;
@@ -52,7 +52,7 @@ namespace GANClient
       // HACK : 야매코드 (Header가 바뀌면 바뀌어야하는 코드
       int originOffset = front;
       int originLength = Length;
-      int totalSize = Marshal.SizeOf(header) + Length;
+      int totalSize = Marshal.SizeOf(header) + originLength;
 
       byte[] temp = Buffer;
       Buffer = new byte[totalSize];
@@ -60,6 +60,7 @@ namespace GANClient
       rear = 0;
       Write(header.Code);
       Write(header.Length);
+      //Logger.Enqueue(header.Length.ToString());
 
       System.Buffer.BlockCopy(temp, originOffset, Buffer, rear, originLength);
       rear += originLength;
@@ -78,6 +79,16 @@ namespace GANClient
       bufferSize = newSize;
       front = 0;
       rear = copySize;
+    }
+
+    public void Write(byte value)
+    {
+      if (WritableLength < 1)
+      {
+        Resize(bufferSize + 1);
+      }
+      Buffer[rear] = value;
+      rear += 1;
     }
 
     public void Write(int value)
@@ -116,6 +127,18 @@ namespace GANClient
       }
       System.Buffer.BlockCopy(binary, 0, Buffer, rear, binary.Length);
       rear += binary.Length;
+    }
+
+    public bool Read(ref byte value)
+    {
+      if (this.Length < 1)
+      {
+        return false;
+      }
+
+      value = Buffer[front];
+      front += 1;
+      return true;
     }
 
     public bool Read(ref int value)

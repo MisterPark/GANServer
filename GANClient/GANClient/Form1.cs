@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,10 +15,13 @@ namespace GANClient
   {
     Timer logTimer;
     NetClient client;
+    string imgPath = Application.StartupPath + "\\images";
 
     public Form1()
     {
       InitializeComponent();
+
+      CreateFolder();
 
       logTimer = new Timer();
       logTimer.Interval = 100;
@@ -28,6 +32,15 @@ namespace GANClient
       client.Received += ProcessPacket;
       client.Connect();
       
+    }
+
+    private void CreateFolder()
+    {
+      DirectoryInfo directoryInfo = new DirectoryInfo(imgPath);
+      if(directoryInfo.Exists == false)
+      {
+        directoryInfo.Create();
+      }
     }
 
     private void ProcessLog(object sender, EventArgs e)
@@ -54,6 +67,12 @@ namespace GANClient
         case MsgType.Image:
           ReceiveImage(packet);
           break;
+        case MsgType.CartoonGAN:
+          ReceiveCartoonGAN(packet);
+          break;
+        case MsgType.Cartoonize:
+          ReceiveCartoonize(packet);
+          break;
         default:
           Logger.Enqueue($"[System] 알 수 없는 메세지 타입 : {msgType}");
           break;
@@ -73,7 +92,7 @@ namespace GANClient
 
     }
 
-    private void SendImage()
+    private void SendImage(MsgType type = MsgType.Image)
     {
       if (pictureBox1.Image == null)
       {
@@ -82,7 +101,7 @@ namespace GANClient
       }
       button2.Enabled = false;
       Packet packet = new Packet();
-      packet.Write((int)MsgType.Image);
+      packet.Write((int)type);
       packet.Write(pictureBox1.ImageLocation);
       packet.Write(pictureBox1.Image);
       client.Send(packet);
@@ -99,15 +118,55 @@ namespace GANClient
 
     private void ReceiveImage(Packet packet)
     {
+      int transactionID = 0;
       System.Drawing.Image img = null;
+      packet.Read(ref transactionID);
       if(packet.Read(ref img))
       {
+        CreateFolder();
+        img.Save(imgPath + $"\\{transactionID}.png", System.Drawing.Imaging.ImageFormat.Png);
         this.Invoke(new Action(delegate ()
         {
           button2.Enabled = true;
           pictureBox2.Image = img;
         }));
-        Logger.Enqueue("[System] 이미지 변환 성공");
+        Logger.Enqueue($"[System] 이미지 변환 성공 transaction : {transactionID}");
+      }
+    }
+
+    private void ReceiveCartoonGAN(Packet packet)
+    {
+      int transactionID = 0;
+      System.Drawing.Image img = null;
+      packet.Read(ref transactionID);
+      if (packet.Read(ref img))
+      {
+        CreateFolder();
+        img.Save(imgPath + $"\\{transactionID}.png", System.Drawing.Imaging.ImageFormat.Png);
+        this.Invoke(new Action(delegate ()
+        {
+          button2.Enabled = true;
+          pictureBox2.Image = img;
+        }));
+        Logger.Enqueue($"[System] CartoonGAN 이미지 변환 성공 transaction : {transactionID}");
+      }
+    }
+
+    private void ReceiveCartoonize(Packet packet)
+    {
+      int transactionID = 0;
+      System.Drawing.Image img = null;
+      packet.Read(ref transactionID);
+      if (packet.Read(ref img))
+      {
+        CreateFolder();
+        img.Save(imgPath + $"\\{transactionID}.png", System.Drawing.Imaging.ImageFormat.Png);
+        this.Invoke(new Action(delegate ()
+        {
+          button2.Enabled = true;
+          pictureBox2.Image = img;
+        }));
+        Logger.Enqueue($"[System] Cartoonize 이미지 변환 성공 transaction : {transactionID}");
       }
     }
 
@@ -139,8 +198,54 @@ namespace GANClient
 
     private void button2_Click(object sender, EventArgs e)
     {
+      MsgType type = MsgType.Image;
+      if(radioButton1.Checked)
+      {
+        type = MsgType.CartoonGAN;
+      }
+      else if(radioButton2.Checked)
+      {
+        type = MsgType.Cartoonize;
+      }
       // 이미지 변환
-      SendImage();
+      SendImage(type);
+    }
+
+    private void pictureBox1_DragEnter(object sender, DragEventArgs e)
+    {
+      e.Effect = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Copy : DragDropEffects.None;
+    }
+
+    private void pictureBox1_DragDrop(object sender, DragEventArgs e)
+    {
+      try
+      {
+        string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+        pictureBox1.ImageLocation = files[0];
+      }
+      catch(System.Exception ex)
+      {
+        MessageBox.Show(ex.Message);
+      }
+      
+    }
+
+    private void Form1_DragDrop(object sender, DragEventArgs e)
+    {
+      try
+      {
+        string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+        pictureBox1.ImageLocation = files[0];
+      }
+      catch (System.Exception ex)
+      {
+        MessageBox.Show(ex.Message);
+      }
+    }
+
+    private void Form1_DragEnter(object sender, DragEventArgs e)
+    {
+      e.Effect = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Copy : DragDropEffects.None;
     }
   }
 }

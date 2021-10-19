@@ -47,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CartoonGAN.cs" />
+    <Compile Include="Cartoonize.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -57,6 +58,7 @@
     <Compile Include="INetwork.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="NetBuffer.cs" />
+    <Compile Include="NetClient.cs" />
     <Compile Include="NetServer.cs" />
     <Compile Include="Packet.cs" />
     <Compile Include="Program.cs" />

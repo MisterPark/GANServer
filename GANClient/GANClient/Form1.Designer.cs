@@ -39,10 +39,14 @@ namespace GANClient
       this.panel2 = new System.Windows.Forms.Panel();
       this.pictureBox2 = new System.Windows.Forms.PictureBox();
       this.label1 = new System.Windows.Forms.Label();
+      this.groupBox1 = new System.Windows.Forms.GroupBox();
+      this.radioButton1 = new System.Windows.Forms.RadioButton();
+      this.radioButton2 = new System.Windows.Forms.RadioButton();
       ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
       this.panel1.SuspendLayout();
       this.panel2.SuspendLayout();
       ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
+      this.groupBox1.SuspendLayout();
       this.SuspendLayout();
       // 
       // listBox1
@@ -51,7 +55,7 @@ namespace GANClient
       this.listBox1.ItemHeight = 12;
       this.listBox1.Location = new System.Drawing.Point(12, 314);
       this.listBox1.Name = "listBox1";
-      this.listBox1.Size = new System.Drawing.Size(698, 124);
+      this.listBox1.Size = new System.Drawing.Size(806, 124);
       this.listBox1.TabIndex = 0;
       // 
       // button1
@@ -101,6 +105,8 @@ namespace GANClient
       this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
       this.pictureBox1.TabIndex = 5;
       this.pictureBox1.TabStop = false;
+      this.pictureBox1.DragDrop += new System.Windows.Forms.DragEventHandler(this.pictureBox1_DragDrop);
+      this.pictureBox1.DragEnter += new System.Windows.Forms.DragEventHandler(this.pictureBox1_DragEnter);
       // 
       // panel1
       // 
@@ -139,11 +145,46 @@ namespace GANClient
       this.label1.TabIndex = 8;
       this.label1.Text = "▶";
       // 
+      // groupBox1
+      // 
+      this.groupBox1.Controls.Add(this.radioButton2);
+      this.groupBox1.Controls.Add(this.radioButton1);
+      this.groupBox1.Location = new System.Drawing.Point(596, 117);
+      this.groupBox1.Name = "groupBox1";
+      this.groupBox1.Size = new System.Drawing.Size(222, 104);
+      this.groupBox1.TabIndex = 10;
+      this.groupBox1.TabStop = false;
+      this.groupBox1.Text = "GAN 타입";
+      // 
+      // radioButton1
+      // 
+      this.radioButton1.AutoSize = true;
+      this.radioButton1.Checked = true;
+      this.radioButton1.Location = new System.Drawing.Point(25, 41);
+      this.radioButton1.Name = "radioButton1";
+      this.radioButton1.Size = new System.Drawing.Size(135, 16);
+      this.radioButton1.TabIndex = 0;
+      this.radioButton1.TabStop = true;
+      this.radioButton1.Text = "CartoonGAN-Hayao";
+      this.radioButton1.UseVisualStyleBackColor = true;
+      // 
+      // radioButton2
+      // 
+      this.radioButton2.AutoSize = true;
+      this.radioButton2.Location = new System.Drawing.Point(25, 63);
+      this.radioButton2.Name = "radioButton2";
+      this.radioButton2.Size = new System.Drawing.Size(84, 16);
+      this.radioButton2.TabIndex = 1;
+      this.radioButton2.Text = "Cartoonize";
+      this.radioButton2.UseVisualStyleBackColor = true;
+      // 
       // Form1
       // 
+      this.AllowDrop = true;
       this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
       this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-      this.ClientSize = new System.Drawing.Size(722, 450);
+      this.ClientSize = new System.Drawing.Size(830, 450);
+      this.Controls.Add(this.groupBox1);
       this.Controls.Add(this.label1);
       this.Controls.Add(this.panel2);
       this.Controls.Add(this.panel1);
@@ -154,10 +195,14 @@ namespace GANClient
       this.Controls.Add(this.listBox1);
       this.Name = "Form1";
       this.Text = "GAN Client";
+      this.DragDrop += new System.Windows.Forms.DragEventHandler(this.Form1_DragDrop);
+      this.DragEnter += new System.Windows.Forms.DragEventHandler(this.Form1_DragEnter);
       ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
       this.panel1.ResumeLayout(false);
       this.panel2.ResumeLayout(false);
       ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
+      this.groupBox1.ResumeLayout(false);
+      this.groupBox1.PerformLayout();
       this.ResumeLayout(false);
       this.PerformLayout();
 
@@ -175,6 +220,9 @@ namespace GANClient
     private System.Windows.Forms.Panel panel2;
     private System.Windows.Forms.PictureBox pictureBox2;
     private System.Windows.Forms.Label label1;
+    private System.Windows.Forms.GroupBox groupBox1;
+    private System.Windows.Forms.RadioButton radioButton2;
+    private System.Windows.Forms.RadioButton radioButton1;
   }
 }
 

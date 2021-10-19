@@ -18,33 +18,20 @@ namespace GANServer
 
   class CartoonGAN : IGAN
   {
+    private Process process;
+    public Process Process => process;
     public CartoonGANType GANType { get; set; }
 
-    public void Test()
+    public void Start()
     {
-      string ganExe = string.Empty;
-      switch (GANType)
-      {
-        case CartoonGANType.Hosoda:
-          ganExe = "\\test_Hosoda.bat";
-          break;
-        case CartoonGANType.Hayao:
-          ganExe = "\\test_Hayao.bat";
-          break;
-        case CartoonGANType.Paprika:
-          ganExe = "\\test_Paprika.bat";
-          break;
-        case CartoonGANType.Shinkai:
-          ganExe = "\\test_Shinkai.bat";
-          break;
-        default:
-          ganExe = "\\test_Hosoda.bat";
-          break;
-      }
+      string appPath = Application.StartupPath + "\\CartoonGAN.bat";
+      process = Process.Start(appPath);
+    }
 
-      string appPath = Application.StartupPath + ganExe;
-      Process.Start(appPath);
-
+    public void Close()
+    {
+      if (process == null) return;
+      process.Kill();
     }
   }
 }
