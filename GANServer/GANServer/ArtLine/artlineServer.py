@@ -89,20 +89,16 @@ isShutdown = False
 
 # function
 def read_buffer(buffer:bytearray, count:int):
-	if(len(buffer) < count):
-		return None
-	ret = bytearray()
-	for i in range(count):
-		ret.append(buffer[0])
-		buffer.pop(0)
-	return ret
+    if(len(buffer)<count):
+        return None
+    ret = buffer[0:count]
+    del buffer[0:count]
+    return ret
 
 def peek_buffer(buffer:bytearray, count:int):
 	if(len(buffer)< count):
 		return None
-	ret = bytearray()
-	for i in range(count):
-		ret.append(buffer[i])
+	ret = buffer[0:count]
 	return ret
 
 def image_to_bytes(image:PIL.Image):
@@ -141,7 +137,7 @@ def processGAN(socket:socket.socket, id:int, transactionId:int, image:PIL.Image)
 def recvProc(clientSocket):
 	buffer= bytearray()
 	while (isShutdown == False):
-            data = clientSocket.recv(1024)
+            data = clientSocket.recv(1024000)
             if not data:
                 break
             buffer += data
@@ -184,6 +180,7 @@ print('Artline Server Start...')
 
 while (isShutdown == False):
     result = listenSocket.accept()
+    result[0].setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
     thread = Thread(target=recvProc, args=(result[0],))
     threadList.append(thread)
     thread.start()

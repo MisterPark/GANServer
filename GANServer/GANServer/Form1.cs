@@ -18,10 +18,12 @@ namespace GANServer
     NetClient cartoonGANClient;
     NetClient cartoonizeClient;
     NetClient artlineClient;
+    NetClient paintsChainerClient;
     int transaction = 0;
     CartoonGAN gan;
     Cartoonize cartoonize;
     Artline artline;
+    PaintsChainer paintsChainer;
 
     public Form1()
     {
@@ -42,6 +44,9 @@ namespace GANServer
       artline = new Artline();
       artline.Start();
 
+      paintsChainer = new PaintsChainer();
+      paintsChainer.Start();
+
       cartoonGANClient = new NetClient("127.0.0.1", 9999);
       cartoonGANClient.Received += ProcessPacket;
       cartoonGANClient.ConnectAsync(true);
@@ -53,6 +58,10 @@ namespace GANServer
       artlineClient = new NetClient("127.0.0.1", 6666);
       artlineClient.Received += ProcessPacket;
       artlineClient.ConnectAsync(true);
+
+      paintsChainerClient = new NetClient("127.0.0.1", 11111);
+      paintsChainerClient.Received += ProcessPacket;
+      paintsChainerClient.ConnectAsync(true);
 
       server = new NetServer(14536);
       server.Received += ProcessPacket;
@@ -92,6 +101,9 @@ namespace GANServer
         case MsgType.Artline:
           RequestConvertArtLine(sessionID, packet);
           break;
+        case MsgType.PaintsChainer:
+          RequestConvertPaintsChainer(sessionID, packet);
+          break;
         default:
           Logger.Enqueue($"[System] 알 수 없는 메세지 타입 : {msgType} / SessionID : {sessionID}");
           server.Disconnect(sessionID);
@@ -116,6 +128,9 @@ namespace GANServer
           break;
         case MsgType.Artline:
           ResponseConvertArtLine(packet);
+          break;
+        case MsgType.PaintsChainer:
+          ResponseConvertPaintsChainer(packet);
           break;
         default:
           Logger.Enqueue($"[System] 알 수 없는 메세지 타입 : {msgType} / GAN Server로부터 받은 메세지");
@@ -169,6 +184,23 @@ namespace GANServer
 
       Packet pack = new Packet();
       pack.Write((int)MsgType.Artline);
+      pack.Write(transactionId);
+      pack.Write(image);
+      server.SendUnicast(sessionID, pack);
+    }
+
+    private void ResponseConvertPaintsChainer(Packet packet)
+    {
+      // PaintsChainer 에서 응답
+      int sessionID = -1;
+      int transactionId = 0;
+      Image image = null;
+      packet.Read(ref sessionID);
+      packet.Read(ref transactionId);
+      packet.Read(ref image);
+
+      Packet pack = new Packet();
+      pack.Write((int)MsgType.PaintsChainer);
       pack.Write(transactionId);
       pack.Write(image);
       server.SendUnicast(sessionID, pack);
@@ -270,6 +302,27 @@ namespace GANServer
         artlineClient.Send(pack);
       }
     }
+
+    private void RequestConvertPaintsChainer(int sessionID, Packet packet)
+    {
+      System.Drawing.Image img = null;
+      System.Drawing.Image img_ref = null;
+      packet.Read(ref img);
+      packet.Read(ref img_ref);
+
+      Logger.Enqueue($"[System] 이미지 PaintsChainer 변환 요청 SessionID :{sessionID}");
+      int transactionId = Interlocked.Increment(ref transaction);
+
+      Packet pack = new Packet();
+      pack.Write((int)MsgType.PaintsChainer);
+      pack.Write(sessionID);
+      pack.Write(transactionId);
+      pack.Write(img);
+      pack.Write(img_ref);
+      paintsChainerClient.Send(pack);
+      Logger.Enqueue($"[System] 이미지 PaintsChainer 변환 요청 Transaction :{transactionId}");
+    }
+
 
   }
 }

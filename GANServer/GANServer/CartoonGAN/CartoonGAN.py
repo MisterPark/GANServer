@@ -124,12 +124,13 @@ def save_image(tensor, nrow=8, padding=2,
     im = Image.fromarray(ndarr)
     return im
 
+model = Transformer()
+model.load_state_dict(torch.load(os.path.join('./pretrained_model', 'Hayao' + '_net_G_float.pth')))
+model.eval()
+model.float()
 
 def cartoonGAN(input:Image):
-	model = Transformer()
-	model.load_state_dict(torch.load(os.path.join('./pretrained_model', 'Hayao' + '_net_G_float.pth')))
-	model.eval()
-	model.float()
+
 
 	input_image = input.convert("RGB")
 	# resize image, keep aspect ratio
@@ -178,45 +179,42 @@ isShutdown = False
 
 # function
 def read_buffer(buffer:bytearray, count:int):
-	if(len(buffer) < count):
-		return None
-	ret = bytearray()
-	for i in range(count):
-		ret.append(buffer[0])
-		buffer.pop(0)
-	return ret
+    if(len(buffer)<count):
+        return None
+    ret = buffer[0:count]
+    del buffer[0:count]
+    return ret
 
 def peek_buffer(buffer:bytearray, count:int):
 	if(len(buffer)< count):
 		return None
-	ret = bytearray()
-	for i in range(count):
-		ret.append(buffer[i])
+	ret = buffer[0:count]
 	return ret
 
 
-def image_to_byte_array(image:Image):
+def image_to_bytes(image:Image):
 	imgByteArr = io.BytesIO()
 	image.save(imgByteArr, 'JPEG')
 	imgByteArr = imgByteArr.getvalue()
 	return imgByteArr
 
-def byte_array_to_image(binary:bytes):
+def bytes_to_image(binary:bytes):
 	imgStream = io.BytesIO(binary)
 	img = Image.open(imgStream)
 	return img
 
-def processGAN(socket:socket.socket, transaction:int, image:Image):
-    print('Start GAN')
+def processGAN(socket:socket.socket, id:int, transactionId:int, image:Image):
+    print('Start GAN : {}'.format(transactionId))
     output = cartoonGAN(image)
-    print('Complete GAN')
-    imgBinary = image_to_byte_array(output)
+    print('Complete GAN : {}'.format(transactionId))
+    imgBinary = image_to_bytes(output)
     buffer = bytearray()
     payload = bytearray()
     buffer += int.to_bytes(PACKET_CODE,4,'little')
 
     payload += int.to_bytes(3,4,'little') # type
-    payload += int.to_bytes(transaction,4,'little') #ID
+    payload += int.to_bytes(id,4,'little') #ID
+    payload += int.to_bytes(transactionId,4,'little') # transactionId
     payload += int.to_bytes(len(imgBinary),4,'little') #img Length
     payload += imgBinary #img
     
@@ -230,7 +228,7 @@ def processGAN(socket:socket.socket, transaction:int, image:Image):
 def recvProc(clientSocket):
 	buffer= bytearray()
 	while (isShutdown == False):
-            data = clientSocket.recv(1024)
+            data = clientSocket.recv(1024000)
             if not data:
                 break
             buffer += data
@@ -250,13 +248,14 @@ def recvProc(clientSocket):
                     break
                 read_buffer(buffer,HEADER_SIZE)
                 msgType = int.from_bytes(bytes(read_buffer(buffer,4)),'little')
-                print('MsgType : {}'.format(msgType))
-                transactionID = int.from_bytes(bytes(read_buffer(buffer,4)),'little')
+                #print('MsgType : {}'.format(msgType))
+                id = int.from_bytes(bytes(read_buffer(buffer,4)),'little')
+                transactionId = int.from_bytes(bytes(read_buffer(buffer,4)),'little')
                 imgLength = int.from_bytes(bytes(read_buffer(buffer,4)),'little')
-                print(imgLength)
+                #print(imgLength)
                 imgBinary = read_buffer(buffer, imgLength)
-                srcImage = byte_array_to_image(bytes(imgBinary))
-                thread = Thread(target=processGAN, args=(clientSocket,transactionID,srcImage))
+                srcImage = bytes_to_image(bytes(imgBinary))
+                thread = Thread(target=processGAN, args=(clientSocket,id,transactionId,srcImage))
                 thread.start()
 	
 	clientSocket.close()
@@ -273,6 +272,7 @@ print('Cartoon GAN Server Start...')
 while (isShutdown == False):
 	#clientSock, addr = listenSocket.accept()
     result = listenSocket.accept()
+    result[0].setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
     thread = Thread(target=recvProc, args=(result[0],))
     threadList.append(thread)
     thread.start()

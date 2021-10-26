@@ -46,13 +46,13 @@ namespace GANServer
       bool pending = socket.ReceiveAsync(args);
     }
 
-    public void ConnectAsync(bool again = false)
+    public void ConnectAsync(bool retry = false)
     {
       if (socket.Connected) return;
       if (tryConnect) return;
       tryConnect = true;
       SocketAsyncEventArgs args = new SocketAsyncEventArgs();
-      if(again)
+      if(retry)
       {
         args.Completed += ConnectCompleted_Repeat;
       }

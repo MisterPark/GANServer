@@ -8,5 +8,6 @@ public enum MsgType : int
   CartoonGAN,
   Cartoonize,
   ArtLine,
+  PaintsChainer,
 }
 

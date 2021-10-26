@@ -118,7 +118,7 @@ namespace GANServer
     public void Write(System.Drawing.Image value)
     {
       MemoryStream ms = new MemoryStream();
-      value.Save(ms, value.RawFormat);
+      value.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
       byte[] binary = ms.ToArray();
       Write(binary.Length);
       if (WritableLength < binary.Length)
@@ -185,6 +185,7 @@ namespace GANServer
 
       MemoryStream ms = new MemoryStream(Buffer, front, len);
       value = System.Drawing.Image.FromStream(ms);
+      front += len;
       return true;
     }
 

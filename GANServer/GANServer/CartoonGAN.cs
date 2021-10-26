@@ -24,7 +24,7 @@ namespace GANServer
 
     public void Start()
     {
-      string appPath = Application.StartupPath + "\\CartoonGAN.bat";
+      string appPath = Application.StartupPath + "\\CartoonGAN\\CartoonGAN.bat";
       process = Process.Start(appPath);
     }
 

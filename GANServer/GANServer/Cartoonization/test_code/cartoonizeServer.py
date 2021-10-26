@@ -25,23 +25,25 @@ def resize_crop(image):
     h, w = (h//8)*8, (w//8)*8
     image = image[:h, :w, :]
     return image
+
+# initialize
+input_photo = tf.placeholder(tf.float32, [1, None, None, 3])
+network_out = network.unet_generator(input_photo)
+final_out = guided_filter.guided_filter(input_photo, network_out, r=1, eps=5e-3)
+
+all_vars = tf.trainable_variables()
+gene_vars = [var for var in all_vars if 'generator' in var.name]
+saver = tf.train.Saver(var_list=gene_vars)
     
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
+sess = tf.Session(config=config)
+
+sess.run(tf.global_variables_initializer())
+saver.restore(sess, tf.train.latest_checkpoint('saved_models'))
 
 def cartoonize(input:Image):
-    input_photo = tf.placeholder(tf.float32, [1, None, None, 3])
-    network_out = network.unet_generator(input_photo)
-    final_out = guided_filter.guided_filter(input_photo, network_out, r=1, eps=5e-3)
 
-    all_vars = tf.trainable_variables()
-    gene_vars = [var for var in all_vars if 'generator' in var.name]
-    saver = tf.train.Saver(var_list=gene_vars)
-    
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
-    sess = tf.Session(config=config)
-
-    sess.run(tf.global_variables_initializer())
-    saver.restore(sess, tf.train.latest_checkpoint('saved_models'))
     try:
         # pil to cv2
         numpy_image = np.array(input)
@@ -66,7 +68,7 @@ def cartoonize(input:Image):
 
 # const
 HOST = '127.0.0.1'
-PORT = 10000
+PORT = 8888
 PACKET_CODE = int('0x77',16)
 HEADER_SIZE = 8
 
@@ -78,20 +80,16 @@ isShutdown = False
 
 # function
 def read_buffer(buffer:bytearray, count:int):
-	if(len(buffer) < count):
-		return None
-	ret = bytearray()
-	for i in range(count):
-		ret.append(buffer[0])
-		buffer.pop(0)
-	return ret
+    if(len(buffer)<count):
+        return None
+    ret = buffer[0:count]
+    del buffer[0:count]
+    return ret
 
 def peek_buffer(buffer:bytearray, count:int):
 	if(len(buffer)< count):
 		return None
-	ret = bytearray()
-	for i in range(count):
-		ret.append(buffer[i])
+	ret = buffer[0:count]
 	return ret
 
 def image_to_bytes(image:Image):
@@ -114,7 +112,7 @@ def processGAN(socket:socket.socket, id:int, transactionId:int, image:Image):
     payload = bytearray()
     buffer += int.to_bytes(PACKET_CODE,4,'little')
 
-    payload += int.to_bytes(3,4,'little') # type
+    payload += int.to_bytes(4,4,'little') # type
     payload += int.to_bytes(id,4,'little') #ID
     payload += int.to_bytes(transactionId,4,'little') # transactionId
     payload += int.to_bytes(len(imgBinary),4,'little') #img Length
@@ -130,7 +128,7 @@ def processGAN(socket:socket.socket, id:int, transactionId:int, image:Image):
 def recvProc(clientSocket):
 	buffer= bytearray()
 	while (isShutdown == False):
-            data = clientSocket.recv(1024)
+            data = clientSocket.recv(1024000)
             if not data:
                 break
             buffer += data
@@ -172,8 +170,8 @@ listenSocket.listen()
 print('Cartoonize Server Start...')
 
 while (isShutdown == False):
-	#clientSock, addr = listenSocket.accept()
     result = listenSocket.accept()
+    result[0].setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
     thread = Thread(target=recvProc, args=(result[0],))
     threadList.append(thread)
     thread.start()

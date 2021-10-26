@@ -45,6 +45,7 @@ namespace GANServer
       isStart = true;
       
       listenSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+      listenSocket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, true);
       listenSocket.Bind(endPoint);
       listenSocket.Listen(ushort.MaxValue);
       Logger.Enqueue("[System] Listening...");
