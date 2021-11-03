@@ -8,21 +8,30 @@ using System.Windows.Forms;
 
 namespace GANServer
 {
-  class Artline : IGAN
+  class Artline : GAN
   {
-    private Process process;
-    public Process Process => process;
-
-    public void Start()
+    public Artline(int port) : base(port)
     {
-      string appPath = Application.StartupPath + "\\Artline\\ArtLineServer.bat";
-      process = Process.Start(appPath);
     }
 
-    public void Close()
+    public Artline(string ip, int port) : base(ip, port)
     {
-      if (process == null) return;
-      process.Kill();
+    }
+
+    public override void Start()
+    {
+      string appPath = Application.StartupPath + "\\Artline\\ArtLineServer.bat";
+      Process.Start(appPath);
+
+      base.Start();
+    }
+
+    public override void Close()
+    {
+      Packet packet = new Packet();
+      packet.Write((int)MsgType.Shutdown);
+      SendMessage(packet);
+      base.Close();
     }
   }
 }

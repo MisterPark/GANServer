@@ -9,5 +9,7 @@ public enum MsgType : int
   Cartoonize,
   Artline,
   PaintsChainer,
+
+  Shutdown,
 }
 

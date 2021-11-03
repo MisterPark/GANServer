@@ -51,6 +51,7 @@ namespace GANClient
       this.tabPage2 = new System.Windows.Forms.TabPage();
       this.pictureBox5 = new System.Windows.Forms.PictureBox();
       this.panel4 = new System.Windows.Forms.Panel();
+      this.button6 = new System.Windows.Forms.Button();
       this.label2 = new System.Windows.Forms.Label();
       this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
       this.button5 = new System.Windows.Forms.Button();
@@ -59,7 +60,6 @@ namespace GANClient
       this.pictureBox4 = new System.Windows.Forms.PictureBox();
       this.pictureBox3 = new System.Windows.Forms.PictureBox();
       this.colorDialog1 = new System.Windows.Forms.ColorDialog();
-      this.button6 = new System.Windows.Forms.Button();
       this.tabControl2.SuspendLayout();
       this.tabPage3.SuspendLayout();
       this.panel3.SuspendLayout();
@@ -136,6 +136,7 @@ namespace GANClient
       this.textBox1.Name = "textBox1";
       this.textBox1.Size = new System.Drawing.Size(741, 21);
       this.textBox1.TabIndex = 5;
+      this.textBox1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBox1_KeyDown_1);
       // 
       // tabControl1
       // 
@@ -317,6 +318,16 @@ namespace GANClient
       this.panel4.Size = new System.Drawing.Size(209, 310);
       this.panel4.TabIndex = 8;
       // 
+      // button6
+      // 
+      this.button6.Location = new System.Drawing.Point(9, 138);
+      this.button6.Name = "button6";
+      this.button6.Size = new System.Drawing.Size(195, 23);
+      this.button6.TabIndex = 5;
+      this.button6.Text = "이미지 불러오기";
+      this.button6.UseVisualStyleBackColor = true;
+      this.button6.Click += new System.EventHandler(this.button6_Click);
+      // 
       // label2
       // 
       this.label2.AutoSize = true;
@@ -397,16 +408,6 @@ namespace GANClient
       this.pictureBox3.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
       this.pictureBox3.TabIndex = 6;
       this.pictureBox3.TabStop = false;
-      // 
-      // button6
-      // 
-      this.button6.Location = new System.Drawing.Point(9, 138);
-      this.button6.Name = "button6";
-      this.button6.Size = new System.Drawing.Size(195, 23);
-      this.button6.TabIndex = 5;
-      this.button6.Text = "이미지 불러오기";
-      this.button6.UseVisualStyleBackColor = true;
-      this.button6.Click += new System.EventHandler(this.button6_Click);
       // 
       // Form1
       // 

@@ -49,6 +49,7 @@ namespace GANServer
       this.Controls.Add(this.listBox1);
       this.Name = "Form1";
       this.Text = "GAN Server";
+      this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
       this.ResumeLayout(false);
 
     }

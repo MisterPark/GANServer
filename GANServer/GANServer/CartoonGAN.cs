@@ -16,22 +16,33 @@ namespace GANServer
     Shinkai
   }
 
-  class CartoonGAN : IGAN
+  class CartoonGAN : GAN
   {
-    private Process process;
-    public Process Process => process;
     public CartoonGANType GANType { get; set; }
 
-    public void Start()
+
+    public CartoonGAN(int port) : base(port)
     {
-      string appPath = Application.StartupPath + "\\CartoonGAN\\CartoonGAN.bat";
-      process = Process.Start(appPath);
     }
 
-    public void Close()
+    public CartoonGAN(string ip, int port) : base(ip, port)
     {
-      if (process == null) return;
-      process.Kill();
+    }
+
+    public override void Start()
+    {
+      string appPath = Application.StartupPath + "\\CartoonGAN\\CartoonGAN.bat";
+      Process.Start(appPath);
+
+      base.Start();
+    }
+
+    public override void Close()
+    {
+      Packet packet = new Packet();
+      packet.Write((int)MsgType.Shutdown);
+      SendMessage(packet);
+      base.Close();
     }
   }
 }

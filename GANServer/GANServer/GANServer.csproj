@@ -55,7 +55,7 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
-    <Compile Include="IGAN.cs" />
+    <Compile Include="GAN.cs" />
     <Compile Include="INetwork.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="NetBuffer.cs" />

@@ -20,7 +20,7 @@ namespace GANServer
     NetClient artlineClient;
     NetClient paintsChainerClient;
     int transaction = 0;
-    CartoonGAN gan;
+    CartoonGAN cartoonGAN;
     Cartoonize cartoonize;
     Artline artline;
     PaintsChainer paintsChainer;
@@ -34,39 +34,47 @@ namespace GANServer
       logTimer.Tick += ProcessLog;
       logTimer.Start();
 
-      gan = new CartoonGAN();
-      gan.GANType = CartoonGANType.Hayao;
-      gan.Start();
+      cartoonGAN = new CartoonGAN(9999);
+      cartoonGAN.GANType = CartoonGANType.Hayao;
+      cartoonGAN.Start();
 
-      cartoonize = new Cartoonize();
+      cartoonize = new Cartoonize(8888);
       cartoonize.Start();
 
-      artline = new Artline();
+      artline = new Artline(6666);
       artline.Start();
 
-      paintsChainer = new PaintsChainer();
+      paintsChainer = new PaintsChainer(11111);
       paintsChainer.Start();
 
-      cartoonGANClient = new NetClient("127.0.0.1", 9999);
-      cartoonGANClient.Received += ProcessPacket;
-      cartoonGANClient.ConnectAsync(true);
+      //cartoonGANClient = new NetClient("127.0.0.1", 9999);
+      //cartoonGANClient.Received += ProcessPacket;
+      //cartoonGANClient.ConnectAsync(true);
 
-      cartoonizeClient = new NetClient("127.0.0.1", 8888);
-      cartoonizeClient.Received += ProcessPacket;
-      cartoonizeClient.ConnectAsync(true);
+      //cartoonizeClient = new NetClient("127.0.0.1", 8888);
+      //cartoonizeClient.Received += ProcessPacket;
+      //cartoonizeClient.ConnectAsync(true);
 
-      artlineClient = new NetClient("127.0.0.1", 6666);
-      artlineClient.Received += ProcessPacket;
-      artlineClient.ConnectAsync(true);
+      //artlineClient = new NetClient("127.0.0.1", 6666);
+      //artlineClient.Received += ProcessPacket;
+      //artlineClient.ConnectAsync(true);
 
-      paintsChainerClient = new NetClient("127.0.0.1", 11111);
-      paintsChainerClient.Received += ProcessPacket;
-      paintsChainerClient.ConnectAsync(true);
+      //paintsChainerClient = new NetClient("127.0.0.1", 11111);
+      //paintsChainerClient.Received += ProcessPacket;
+      //paintsChainerClient.ConnectAsync(true);
 
       server = new NetServer(14536);
       server.Received += ProcessPacket;
       server.Start();
 
+    }
+
+    private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+    {
+      cartoonGAN.Close();
+      cartoonize.Close();
+      artline.Close();
+      paintsChainer.Close();
     }
 
     private void ProcessLog(object sender, EventArgs e)
@@ -323,6 +331,6 @@ namespace GANServer
       Logger.Enqueue($"[System] 이미지 PaintsChainer 변환 요청 Transaction :{transactionId}");
     }
 
-
+    
   }
 }

@@ -372,7 +372,7 @@ namespace GANClient
       pictureBox5.Location = new Point(h, 5);
     }
 
-    private void button4_Click(object sender, EventArgs e)
+    private void button4_Click(object sender, EventArgs e) // 페인트 체이너 요청
     {
       if (pictureBox3.Image == null) return;
       if (pictureBox4.Image == null) return;
@@ -409,6 +409,14 @@ namespace GANClient
         Bitmap bitmap = new Bitmap(w, h);
         canvas = bitmap;
         pictureBox4.Image = bitmap;
+      }
+    }
+
+    private void textBox1_KeyDown_1(object sender, KeyEventArgs e)
+    {
+      if(e.KeyCode == Keys.Enter)
+      {
+        SendChat();
       }
     }
   }

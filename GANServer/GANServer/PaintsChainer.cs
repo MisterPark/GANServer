@@ -8,21 +8,31 @@ using System.Windows.Forms;
 
 namespace GANServer
 {
-  class PaintsChainer : IGAN
+  class PaintsChainer : GAN
   {
-    private Process process;
-    public Process Process => process;
-
-    public void Close()
+    public PaintsChainer(int port) : base(port)
     {
-      if (process == null) return;
-      process.Kill();
     }
 
-    public void Start()
+    public PaintsChainer(string ip, int port) : base(ip, port)
+    {
+    }
+
+    public override void Start()
     {
       string appPath = Application.StartupPath + "\\PaintsChainer\\PaintsChainerServer.bat";
-      process = Process.Start(appPath);
+      Process.Start(appPath);
+
+      base.Start();
+    }
+
+    public override void Close()
+    {
+      Packet packet = new Packet();
+      packet.Write((int)MsgType.Shutdown);
+      SendMessage(packet);
+      
+      base.Close();
     }
   }
 }
