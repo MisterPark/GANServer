@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Threading;
+using System.IO;
 
 namespace GANServer
 {
@@ -15,19 +16,18 @@ namespace GANServer
   {
     System.Windows.Forms.Timer logTimer;
     NetServer server;
-    NetClient cartoonGANClient;
-    NetClient cartoonizeClient;
-    NetClient artlineClient;
-    NetClient paintsChainerClient;
     int transaction = 0;
     CartoonGAN cartoonGAN;
     Cartoonize cartoonize;
     Artline artline;
     PaintsChainer paintsChainer;
 
+    string currentDirectory = string.Empty;
+
     public Form1()
     {
       InitializeComponent();
+      currentDirectory = Directory.GetCurrentDirectory();
 
       logTimer = new System.Windows.Forms.Timer();
       logTimer.Interval = 100;
@@ -36,37 +36,26 @@ namespace GANServer
 
       cartoonGAN = new CartoonGAN(9999);
       cartoonGAN.GANType = CartoonGANType.Hayao;
+      cartoonGAN.Received += ProcessPacket;
       cartoonGAN.Start();
 
       cartoonize = new Cartoonize(8888);
+      cartoonize.Received += ProcessPacket;
       cartoonize.Start();
 
       artline = new Artline(6666);
+      artline.Received += ProcessPacket;
       artline.Start();
 
       paintsChainer = new PaintsChainer(11111);
+      paintsChainer.Received += ProcessPacket;
       paintsChainer.Start();
-
-      //cartoonGANClient = new NetClient("127.0.0.1", 9999);
-      //cartoonGANClient.Received += ProcessPacket;
-      //cartoonGANClient.ConnectAsync(true);
-
-      //cartoonizeClient = new NetClient("127.0.0.1", 8888);
-      //cartoonizeClient.Received += ProcessPacket;
-      //cartoonizeClient.ConnectAsync(true);
-
-      //artlineClient = new NetClient("127.0.0.1", 6666);
-      //artlineClient.Received += ProcessPacket;
-      //artlineClient.ConnectAsync(true);
-
-      //paintsChainerClient = new NetClient("127.0.0.1", 11111);
-      //paintsChainerClient.Received += ProcessPacket;
-      //paintsChainerClient.ConnectAsync(true);
 
       server = new NetServer(14536);
       server.Received += ProcessPacket;
       server.Start();
 
+      
     }
 
     private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -80,10 +69,26 @@ namespace GANServer
     private void ProcessLog(object sender, EventArgs e)
     {
       List<string> logs = Logger.Dequeue();
-      foreach (var item in logs)
+      string folder = DateTime.Now.ToString("yyMMdd");
+      string file = DateTime.Now.ToString("HH");
+      if (Directory.Exists($"{currentDirectory}\\Log\\{folder}") == false)
       {
-        listBox1.Items.Add(item);
+        Directory.CreateDirectory($"{currentDirectory}\\Log\\{folder}");
       }
+      // TODO : 여기서 메모리 릭남
+      using (FileStream stream = File.Open($"{currentDirectory}\\Log\\{folder}\\{file}.txt", FileMode.Append))
+      {
+        using (StreamWriter writer = new StreamWriter(stream))
+        {
+          foreach (var item in logs)
+          {
+            listBox1.Items.Add(item);
+            writer.WriteLine(item);
+          }
+          listBox1.SelectedIndex = listBox1.Items.Count - 1;
+        }
+      }
+        
       
     }
 
@@ -250,7 +255,7 @@ namespace GANServer
         pack.Write(sessionID);
         pack.Write(transactionId);
         pack.Write(img);
-        cartoonGANClient.Send(pack);
+        cartoonGAN.SendMessage(pack);
       }
     }
 
@@ -269,7 +274,7 @@ namespace GANServer
         pack.Write(sessionID);
         pack.Write(transactionId);
         pack.Write(img);
-        cartoonGANClient.Send(pack);
+        cartoonGAN.SendMessage(pack);
       }
     }
 
@@ -288,7 +293,7 @@ namespace GANServer
         pack.Write(sessionID);
         pack.Write(transactionId);
         pack.Write(img);
-        cartoonizeClient.Send(pack);
+        cartoonize.SendMessage(pack);
       }
     }
 
@@ -307,7 +312,7 @@ namespace GANServer
         pack.Write(sessionID);
         pack.Write(transactionId);
         pack.Write(img);
-        artlineClient.Send(pack);
+        artline.SendMessage(pack);
       }
     }
 
@@ -327,7 +332,7 @@ namespace GANServer
       pack.Write(transactionId);
       pack.Write(img);
       pack.Write(img_ref);
-      paintsChainerClient.Send(pack);
+      paintsChainer.SendMessage(pack);
       Logger.Enqueue($"[System] 이미지 PaintsChainer 변환 요청 Transaction :{transactionId}");
     }
 
