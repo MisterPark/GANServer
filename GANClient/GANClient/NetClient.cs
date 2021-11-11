@@ -69,7 +69,8 @@ class NetClient
 
   public void Disconnect()
   {
-    Logger.Enqueue($"[System] Disconnect. [{endpoint.Address}:{endpoint.Port}]");
+    //Logger.Enqueue($"[System] Disconnect. [{endpoint.Address}:{endpoint.Port}]");
+    Logger.Enqueue($"[System] Disconnect.");
     if (socket.Connected)
     {
       try
@@ -100,7 +101,7 @@ class NetClient
     if (e.SocketError == SocketError.Success)
     {
       IPEndPoint endpoint = e.RemoteEndPoint as IPEndPoint;
-      Logger.Enqueue($"[System] Connected [{endpoint.Address}:{endpoint.Port}]");
+      Logger.Enqueue($"[System] Connected ");//[{endpoint.Address}:{endpoint.Port}]");
 
       SocketAsyncEventArgs args = new SocketAsyncEventArgs();
       args.Completed += new EventHandler<SocketAsyncEventArgs>(IOCompleted);
@@ -120,7 +121,7 @@ class NetClient
     if (e.SocketError == SocketError.Success)
     {
       IPEndPoint endpoint = e.RemoteEndPoint as IPEndPoint;
-      Logger.Enqueue($"[System] Connected [{endpoint.Address}:{endpoint.Port}]");
+      Logger.Enqueue($"[System] Connected");// [{endpoint.Address}:{endpoint.Port}]");
 
       SocketAsyncEventArgs args = new SocketAsyncEventArgs();
       args.Completed += new EventHandler<SocketAsyncEventArgs>(IOCompleted);
@@ -131,7 +132,8 @@ class NetClient
     else
     {
       tryConnect = false;
-      Logger.Enqueue($"[System] Connect to {endpoint.Address}:{endpoint.Port} again...");
+      //Logger.Enqueue($"[System] Connect to {endpoint.Address}:{endpoint.Port} again...");
+      Logger.Enqueue($"[System] Connect again...");
       Thread.Sleep(1000);
       ConnectAsync(true);
     }

@@ -44,10 +44,9 @@ namespace GANClient
       logTimer.Interval = 100;
       logTimer.Tick += ProcessLog;
       logTimer.Start();
-
-      client = new NetClient("192.168.0.7",14536);
+      client = new NetClient("58.140.3.174", 14536);
       client.Received += ProcessPacket;
-      client.Connect();
+      client.ConnectAsync(true);
       
     }
 
