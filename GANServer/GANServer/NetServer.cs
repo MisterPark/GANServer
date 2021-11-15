@@ -84,8 +84,7 @@ namespace GANServer
           }
           finally
           {
-            IPEndPoint endpoint = session.Socket.RemoteEndPoint as IPEndPoint;
-            Logger.Enqueue($"[System] Disconnect SeesionID : {session.ID} [{endpoint.Address.ToString()}]  Number of Users : {Sessions.Count}");
+            Logger.Enqueue($"[System] Disconnect SeesionID : {session.ID} [{session.IPAddress}]  Number of Users : {Sessions.Count}");
             session.Socket.Close();
             session.Socket.Dispose();
             session.Socket = null;
@@ -111,8 +110,7 @@ namespace GANServer
         }
         finally
         {
-          IPEndPoint endpoint = session.Socket.RemoteEndPoint as IPEndPoint;
-          Logger.Enqueue($"[System] Disconnect SeesionID : {session.ID} [{endpoint.Address.ToString()}]  Number of Users : {Sessions.Count}");
+          Logger.Enqueue($"[System] Disconnect SeesionID : {session.ID} [{session.IPAddress}]  Number of Users : {Sessions.Count}");
           session.Socket.Close();
           session.Socket.Dispose();
           session.Socket = null;
@@ -194,6 +192,9 @@ namespace GANServer
           }
         }
 
+        IPEndPoint endpoint = session.Socket.RemoteEndPoint as IPEndPoint;
+        session.IPAddress = endpoint.Address.ToString();
+
         SocketAsyncEventArgs args = new SocketAsyncEventArgs();
         args.Completed += new EventHandler<SocketAsyncEventArgs>(IOCompleted);
         args.UserToken = session;
@@ -204,8 +205,7 @@ namespace GANServer
           ReceiveCompleted(e);
         }
 
-        IPEndPoint endpoint = session.Socket.RemoteEndPoint as IPEndPoint;
-        Logger.Enqueue($"[System] Accept SeesionID : {session.ID} [{endpoint.Address.ToString()}] Number of Users : {Sessions.Count}");
+        Logger.Enqueue($"[System] Accept SeesionID : {session.ID} [{session.IPAddress}] Number of Users : {Sessions.Count}");
       }
 
       StartAccept(e);
@@ -248,6 +248,7 @@ namespace GANServer
           if(header.Code != Packet.CODE)
           {
             Logger.Enqueue($"[Error] 패킷의 코드가 일치하지 않습니다. Code : {header.Code}");
+            Disconnect(session.ID);
             break;
           }
           if (size < headerSize + header.Length) break;

@@ -12,6 +12,7 @@ namespace GANServer
   class Session
   {
     public Socket Socket { get; set; } = null;
+    public string IPAddress { get; set; } = string.Empty;
     public int ID { get; set; }
     public NetBuffer RecvBuffer { get; set; } = new NetBuffer();
     public ConcurrentQueue<Packet> SendBuffer { get; private set; } = new ConcurrentQueue<Packet>();

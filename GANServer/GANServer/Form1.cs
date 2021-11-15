@@ -64,6 +64,8 @@ namespace GANServer
       cartoonize.Close();
       artline.Close();
       paintsChainer.Close();
+      Logger.Enqueue($"[System] 정상종료");
+      ProcessLog(null, null);
     }
 
     private void ProcessLog(object sender, EventArgs e)
@@ -75,7 +77,7 @@ namespace GANServer
       {
         Directory.CreateDirectory($"{currentDirectory}\\Log\\{folder}");
       }
-      // TODO : 여기서 메모리 릭남
+
       using (FileStream stream = File.Open($"{currentDirectory}\\Log\\{folder}\\{file}.txt", FileMode.Append))
       {
         using (StreamWriter writer = new StreamWriter(stream))
@@ -118,7 +120,7 @@ namespace GANServer
           RequestConvertPaintsChainer(sessionID, packet);
           break;
         default:
-          Logger.Enqueue($"[System] 알 수 없는 메세지 타입 : {msgType} / SessionID : {sessionID}");
+          Logger.Enqueue($"[Warning] 알 수 없는 메세지 타입 : {msgType} / SessionID : {sessionID}");
           server.Disconnect(sessionID);
           break;
       }
@@ -240,7 +242,7 @@ namespace GANServer
       packet.Read(ref imgLocation);
       if (packet.Read(ref img))
       {
-        Logger.Enqueue($"[System] 이미지 변환 요청 {imgLocation}");
+        Logger.Enqueue($"[System] 이미지 변환 요청 SessionID :{sessionID}");
         // 에코
         //Packet pack = new Packet();
         //pack.Write((int)MsgType.Image);
@@ -266,7 +268,7 @@ namespace GANServer
       packet.Read(ref imgLocation);
       if (packet.Read(ref img))
       {
-        Logger.Enqueue($"[System] 이미지 CartoonGAN 변환 요청 {imgLocation}");
+        Logger.Enqueue($"[System] 이미지 CartoonGAN 변환 요청 SessionID :{sessionID}");
         int transactionId = Interlocked.Increment(ref transaction);
 
         Packet pack = new Packet();
@@ -285,7 +287,7 @@ namespace GANServer
       packet.Read(ref imgLocation);
       if (packet.Read(ref img))
       {
-        Logger.Enqueue($"[System] 이미지 Cartoonize 변환 요청 {imgLocation}");
+        Logger.Enqueue($"[System] 이미지 Cartoonize 변환 요청 SessionID :{sessionID}");
         int transactionId = Interlocked.Increment(ref transaction);
 
         Packet pack = new Packet();
@@ -304,7 +306,7 @@ namespace GANServer
       packet.Read(ref imgLocation);
       if (packet.Read(ref img))
       {
-        Logger.Enqueue($"[System] 이미지 Cartoonize 변환 요청 {imgLocation}");
+        Logger.Enqueue($"[System] 이미지 ArtLine 변환 요청 SessionID :{sessionID}");
         int transactionId = Interlocked.Increment(ref transaction);
 
         Packet pack = new Packet();
@@ -333,7 +335,6 @@ namespace GANServer
       pack.Write(img);
       pack.Write(img_ref);
       paintsChainer.SendMessage(pack);
-      Logger.Enqueue($"[System] 이미지 PaintsChainer 변환 요청 Transaction :{transactionId}");
     }
 
     

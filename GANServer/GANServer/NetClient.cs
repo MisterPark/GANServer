@@ -199,7 +199,7 @@ class NetClient
     else if (e.BytesTransferred == 0)
     {
       Logger.Enqueue($"[System] 서버에 의해 연결이 종료되었습니다.");
-      Disconnect();
+      //Disconnect();
     }
     else
     {
