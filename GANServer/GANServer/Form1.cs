@@ -27,6 +27,7 @@ namespace GANServer
     public Form1()
     {
       InitializeComponent();
+      Configuration config = Configuration.Load();
       currentDirectory = Directory.GetCurrentDirectory();
 
       logTimer = new System.Windows.Forms.Timer();
@@ -34,24 +35,24 @@ namespace GANServer
       logTimer.Tick += ProcessLog;
       logTimer.Start();
 
-      cartoonGAN = new CartoonGAN(9999);
+      cartoonGAN = new CartoonGAN(config.CartoonGANIP, config.CartoonGANPort);
       cartoonGAN.GANType = CartoonGANType.Hayao;
       cartoonGAN.Received += ProcessPacket;
       cartoonGAN.Start();
 
-      cartoonize = new Cartoonize(8888);
+      cartoonize = new Cartoonize(config.CartoonizeIP, config.CartoonizePort);
       cartoonize.Received += ProcessPacket;
       cartoonize.Start();
 
-      artline = new Artline(6666);
+      artline = new Artline(config.ArtlineIP, config.ArtlinePort);
       artline.Received += ProcessPacket;
       artline.Start();
 
-      paintsChainer = new PaintsChainer(11111);
+      paintsChainer = new PaintsChainer(config.PaintsChainerIP, config.PaintsChainerPort);
       paintsChainer.Received += ProcessPacket;
       paintsChainer.Start();
 
-      server = new NetServer(14536);
+      server = new NetServer(config.MainServerPort);
       server.Received += ProcessPacket;
       server.Start();
 
